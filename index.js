@@ -58,6 +58,6 @@ app.get('/test', (req, res) => {
   res.send('🤖 DMT Role Syncer bot is online and listening for approvals!');
 });
 
-app.listen(porcess.env.PORT || 3000, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log('🌐 Webhook listener running on port 3000');
 });
