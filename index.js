@@ -2,16 +2,19 @@ const fs = require('fs');
 require('dotenv').config();
 
 const token = process.env.DISCORD_TOKEN;
-console.log('Loaded Token:', token);
-const { Client, GatewayIntentBits } = require('discord.js');
+const port = process.env.PORT || 3000;
+
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const express = require('express');
-const config = require('./config.json');
+
+const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers
-  ]
+  ],
+  partials: [Partials.GuildMember]
 });
 
 client.login(token);
@@ -23,35 +26,52 @@ client.once('ready', () => {
 const app = express();
 app.use(express.json());
 
+// 🔎 Helper function to find member by username#discriminator
+async function findMemberByName(discordName) {
+  const guild = await client.guilds.fetch(config.guildId);
+  const members = await guild.members.fetch();
+
+  const member = members.find(m =>
+    m.user.tag.toLowerCase() === discordName.toLowerCase()
+  );
+
+  return member;
+}
+
+// ✅ Approve endpoint
 app.post('/approve', async (req, res) => {
   try {
-    const { discordName, tier } = req.body;
-    const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
-    const roleId = config.roleIds[tier];
+    console.log('[POST /approve] Request body:', req.body);
 
+    const { discordName, tier } = req.body;
+    if (!discordName || !tier) {
+      return res.status(400).send('Missing "discordName" or "tier" in body.');
+    }
+
+    const roleId = config.roleIds[tier];
     if (!roleId) {
       return res.status(400).send(`Tier "${tier}" not recognized.`);
     }
 
-    const member = await findMemberByName(discordName); // Make sure this function exists and works
-
+    const member = await findMemberByName(discordName);
     if (!member) {
       return res.status(404).send(`User "${discordName}" not found in the server.`);
     }
 
     await member.roles.add(roleId);
-    console.log(`✅ Role ${tier} added to ${discordName}`);
-    res.send(`✅ Role ${tier} added to ${discordName}`);
+    console.log(`✅ Role "${tier}" added to ${discordName}`);
+    res.send(`✅ Role "${tier}" added to ${discordName}`);
   } catch (err) {
-    console.error(err);
+    console.error('❌ Error in /approve:', err);
     res.status(500).send('❌ Internal error occurred while approving user.');
   }
 });
 
+// 🧪 Simple test route
 app.get('/test', (req, res) => {
   res.send('🤖 DMT Role Syncer bot is online and listening for approvals!');
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('🌐 Webhook listener running on port 3000');
+app.listen(port, () => {
+  console.log(`🌐 Webhook listener running on port ${port}`);
 });
