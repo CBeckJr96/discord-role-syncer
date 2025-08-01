@@ -22,37 +22,27 @@ const app = express();
 app.use(express.json());
 
 app.post('/approve', async (req, res) => {
-  console.log('Received POST body:', req.body);
-  const { discordName, tier } = req.body;
-
-  if (!discordName || !tier) {
-    return res.status(400).json({ error: 'Missing discordName or tier' });
-  }
-
-  const guild = await client.guilds.fetch(config.guildId);
-  const members = await guild.members.fetch();
-
-  const targetName = discordName.trim().toLowerCase();
-  const member = members.find(m =>
-    m.user.username.toLowerCase() === targetName || 
-    m.user.tag.toLowerCase() === targetName
-  );
-
-  if (!member) {
-    return res.status(404).json({ error: `User ${discordName} not found.` });
-  }
-
-  const roleId = config.roleIds[tier];
-  if (!roleId) {
-    return res.status(400).json({ error: `Invalid tier: ${tier}` });
-  }
-
   try {
+    const { discordName, tier } = req.body;
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+    const roleId = config.roleIds[tier];
+
+    if (!roleId) {
+      return res.status(400).send(`Tier "${tier}" not recognized.`);
+    }
+
+    const member = await findMemberByName(discordName); // Make sure this function exists and works
+
+    if (!member) {
+      return res.status(404).send(`User "${discordName}" not found in the server.`);
+    }
+
     await member.roles.add(roleId);
-    res.json({ success: true, message: `Assigned ${tier} role to ${discordName}` });
+    console.log(`✅ Role ${tier} added to ${discordName}`);
+    res.send(`✅ Role ${tier} added to ${discordName}`);
   } catch (err) {
-    console.error('Role assignment failed:', err);
-    res.status(500).json({ error: `Failed to assign role: ${err.message}` });
+    console.error(err);
+    res.status(500).send('❌ Internal error occurred while approving user.');
   }
 });
 
