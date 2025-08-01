@@ -47,14 +47,14 @@ async function findMemberByName(discordName) {
   return member;
 }
 
-// ✅ Approve endpoint
+// ✅ Approve endpoint using userId
 app.post('/approve', async (req, res) => {
   try {
     console.log('[POST /approve] Request body:', req.body);
 
-    const { discordName, tier } = req.body;
-    if (!discordName || !tier) {
-      return res.status(400).send('Missing "discordName" or "tier" in body.');
+    const { userId, tier } = req.body;
+    if (!userId || !tier) {
+      return res.status(400).send('Missing "userId" or "tier" in body.');
     }
 
     const roleId = config.roleIds[tier];
@@ -62,14 +62,16 @@ app.post('/approve', async (req, res) => {
       return res.status(400).send(`Tier "${tier}" not recognized.`);
     }
 
-    const member = await findMemberByName(discordName);
+    const guild = await client.guilds.fetch(config.guildId);
+    const member = await guild.members.fetch(userId);
+
     if (!member) {
-      return res.status(404).send(`User "${discordName}" not found in the server.`);
+      return res.status(404).send(`User with ID "${userId}" not found in the server.`);
     }
 
     await member.roles.add(roleId);
-    console.log(`✅ Role "${tier}" added to ${discordName}`);
-    res.send(`✅ Role "${tier}" added to ${discordName}`);
+    console.log(`✅ Role "${tier}" added to user ID ${userId}`);
+    res.send(`✅ Role "${tier}" added to user ID ${userId}`);
   } catch (err) {
     console.error('❌ Error in /approve:', err);
     res.status(500).send('❌ Internal error occurred while approving user.');
