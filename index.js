@@ -29,11 +29,20 @@ app.use(express.json());
 // 🔎 Helper function to find member by username#discriminator
 async function findMemberByName(discordName) {
   const guild = await client.guilds.fetch(config.guildId);
+  console.log('✅ Guild fetched:', guild.name);
+
   const members = await guild.members.fetch();
+  console.log(`✅ Fetched ${members.size} members`);
 
   const member = members.find(m =>
     m.user.tag.toLowerCase() === discordName.toLowerCase()
   );
+
+  if (!member) {
+    console.warn(`❌ Could not find member with tag "${discordName}"`);
+  } else {
+    console.log(`✅ Found member: ${member.user.tag}`);
+  }
 
   return member;
 }
