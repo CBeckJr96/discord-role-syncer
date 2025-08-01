@@ -3,7 +3,6 @@ const token = process.env.DISCORD_TOKEN;
 console.log('Loaded Token:', token);
 const { Client, GatewayIntentBits } = require('discord.js');
 const express = require('express');
-const fs = require('fs');
 const config = require('./config.json');
 
 const client = new Client({
@@ -23,6 +22,7 @@ const app = express();
 app.use(express.json());
 
 app.post('/approve', async (req, res) => {
+  console.log('Received POST body:', req.body);
   const { discordName, tier } = req.body;
 
   if (!discordName || !tier) {
@@ -32,8 +32,10 @@ app.post('/approve', async (req, res) => {
   const guild = await client.guilds.fetch(config.guildId);
   const members = await guild.members.fetch();
 
+  const targetName = discordName.trim().toLowerCase();
   const member = members.find(m =>
-    m.user.username === discordName || m.user.tag === discordName
+    m.user.username.toLowerCase() === targetName || 
+    m.user.tag.toLowerCase() === targetName
   );
 
   if (!member) {
@@ -49,7 +51,7 @@ app.post('/approve', async (req, res) => {
     await member.roles.add(roleId);
     res.json({ success: true, message: `Assigned ${tier} role to ${discordName}` });
   } catch (err) {
-    console.error(err);
+    console.error('Role assignment failed:', err);
     res.status(500).json({ error: `Failed to assign role: ${err.message}` });
   }
 });
