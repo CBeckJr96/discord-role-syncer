@@ -6,11 +6,6 @@ const express = require('express');
 const fs = require('fs');
 const config = require('./config.json');
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`🌐 Webhook listener running on port ${port}`);
-});
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -59,10 +54,10 @@ app.post('/approve', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
+app.get('/test', (req, res) => {
   res.send('🤖 DMT Role Syncer bot is online and listening for approvals!');
 });
 
-app.listen(3000, () => {
+app.listen(porcess.env.PORT || 3000, () => {
   console.log('🌐 Webhook listener running on port 3000');
 });
