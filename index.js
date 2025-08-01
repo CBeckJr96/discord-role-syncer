@@ -5,6 +5,11 @@ const express = require('express');
 const fs = require('fs');
 const config = require('./config.json');
 
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`🌐 Webhook listener running on port ${port}`);
+});
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
