@@ -1,6 +1,5 @@
 require('dotenv').config();
 const token = process.env.DISCORD_TOKEN;
-client.login(token);
 const { Client, GatewayIntentBits } = require('discord.js');
 const express = require('express');
 const fs = require('fs');
@@ -12,6 +11,8 @@ const client = new Client({
     GatewayIntentBits.GuildMembers
   ]
 });
+
+client.login(token);
 
 client.once('ready', () => {
   console.log(`✅ Bot is ready as ${client.user.tag}`);
@@ -59,5 +60,3 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log('🌐 Webhook listener running on port 3000');
 });
-
-client.login(config.token);
