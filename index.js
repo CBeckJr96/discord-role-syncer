@@ -57,6 +57,41 @@ app.post('/approve', async (req, res) => {
   }
 });
 
+// ❌ Remove endpoint 
+app.post('/remove', async (req, res) => {
+  try {
+    console.log('[POST /remove] Request body:', req.body);
+
+    const { discordId, tier } = req.body;
+    if (!discordId || !tier) {
+      return res.status(400).send('Missing "discordId" or "tier" in body.');
+    }
+
+    const roleId = config.roleIds[tier];
+    if (!roleId) {
+      return res.status(400).send(`Tier "${tier}" not recognized.`);
+    }
+
+    const guild = await client.guilds.fetch(config.guildId);
+
+    // Try to fetch member by ID
+    let member;
+    try {
+      member = await guild.members.fetch(discordId);
+    } catch {
+      return res.status(404).send(`User with Discord ID "${discordId}" not found in the server.`);
+    }
+
+    // Remove the role
+    await member.roles.remove(roleId);
+    console.log(`✅ Role "${tier}" removed from Discord ID ${discordId}`);
+    res.send(`✅ Role "${tier}" removed from Discord ID ${discordId}`);
+  } catch (err) {
+    console.error('❌ Error in /remove:', err);
+    res.status(500).send('❌ Internal error occurred while removing role.');
+  }
+});
+
 // 🧪 Simple test route
 app.get('/test', (req, res) => {
   res.send('🤖 DMT Role Syncer bot is online and listening for approvals!');
