@@ -26,34 +26,32 @@ client.once('ready', () => {
 const app = express();
 app.use(express.json());
 
-// ✅ Approve endpoint using discordId
+// ✅ Updated approve endpoint — supports multiple roles
 app.post('/approve', async (req, res) => {
   try {
     console.log('[POST /approve] Request body:', req.body);
 
-    const { discordId, tier } = req.body;
-    if (!discordId || !tier) {
-      return res.status(400).send('Missing "discordId" or "tier" in body.');
-    }
-
-    const roleId = config.roleIds[tier];
-    if (!roleId) {
-      return res.status(400).send(`Tier "${tier}" not recognized.`);
+    const { discordId, roles } = req.body;
+    if (!discordId || !Array.isArray(roles) || roles.length === 0) {
+      return res.status(400).send('Missing "discordId" or valid "roles" array.');
     }
 
     const guild = await client.guilds.fetch(config.guildId);
     const member = await guild.members.fetch(discordId);
 
     if (!member) {
-      return res.status(404).send(`User with Discord ID "${discordId}" not found in the server.`);
+      return res.status(404).send(`User with Discord ID "${discordId}" not found.`);
     }
 
-    await member.roles.add(roleId);
-    console.log(`✅ Role "${tier}" added to Discord ID ${discordId}`);
-    res.send(`✅ Role "${tier}" added to Discord ID ${discordId}`);
+    for (const roleId of roles) {
+      await member.roles.add(roleId);
+      console.log(`✅ Added role ${roleId} to ${discordId}`);
+    }
+
+    res.send(`✅ Roles assigned to ${discordId}`);
   } catch (err) {
     console.error('❌ Error in /approve:', err);
-    res.status(500).send('❌ Internal error occurred while approving user.');
+    res.status(500).send('❌ Failed to assign roles.');
   }
 });
 
