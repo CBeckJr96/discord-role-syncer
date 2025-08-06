@@ -26,34 +26,13 @@ client.once('ready', () => {
 const app = express();
 app.use(express.json());
 
-// 🔎 Helper function to find member by username#discriminator
-async function findMemberByName(discordId) {
-  const guild = await client.guilds.fetch(config.guildId);
-  console.log('✅ Guild fetched:', guild.name);
-
-  const members = await guild.members.fetch();
-  console.log(`✅ Fetched ${members.size} members`);
-
-  const member = members.find(m =>
-    m.user.tag.toLowerCase() === discordId.toLowerCase()
-  );
-
-  if (!member) {
-    console.warn(`❌ Could not find member with tag "${discordId}"`);
-  } else {
-    console.log(`✅ Found member: ${member.user.tag}`);
-  }
-
-  return member;
-}
-
-// ✅ Approve endpoint using userId
+// ✅ Approve endpoint using discordId
 app.post('/approve', async (req, res) => {
   try {
     console.log('[POST /approve] Request body:', req.body);
 
     const { discordId, tier } = req.body;
-    if (!userId || !tier) {
+    if (!discordId || !tier) {
       return res.status(400).send('Missing "discordId" or "tier" in body.');
     }
 
@@ -63,15 +42,15 @@ app.post('/approve', async (req, res) => {
     }
 
     const guild = await client.guilds.fetch(config.guildId);
-    const member = await guild.members.fetch(userId);
+    const member = await guild.members.fetch(discordId);
 
     if (!member) {
-      return res.status(404).send(`User with ID "${userId}" not found in the server.`);
+      return res.status(404).send(`User with Discord ID "${discordId}" not found in the server.`);
     }
 
     await member.roles.add(roleId);
-    console.log(`✅ Role "${tier}" added to user ID ${discordId}`);
-    res.send(`✅ Role "${tier}" added to user ID ${discordId}`);
+    console.log(`✅ Role "${tier}" added to Discord ID ${discordId}`);
+    res.send(`✅ Role "${tier}" added to Discord ID ${discordId}`);
   } catch (err) {
     console.error('❌ Error in /approve:', err);
     res.status(500).send('❌ Internal error occurred while approving user.');
