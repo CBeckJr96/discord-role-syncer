@@ -52,9 +52,9 @@ app.post('/approve', async (req, res) => {
   try {
     console.log('[POST /approve] Request body:', req.body);
 
-    const { userId, tier } = req.body;
+    const { discordId, tier } = req.body;
     if (!userId || !tier) {
-      return res.status(400).send('Missing "userId" or "tier" in body.');
+      return res.status(400).send('Missing "discordId" or "tier" in body.');
     }
 
     const roleId = config.roleIds[tier];
@@ -70,8 +70,8 @@ app.post('/approve', async (req, res) => {
     }
 
     await member.roles.add(roleId);
-    console.log(`✅ Role "${tier}" added to user ID ${userId}`);
-    res.send(`✅ Role "${tier}" added to user ID ${userId}`);
+    console.log(`✅ Role "${tier}" added to user ID ${discordId}`);
+    res.send(`✅ Role "${tier}" added to user ID ${discordId}`);
   } catch (err) {
     console.error('❌ Error in /approve:', err);
     res.status(500).send('❌ Internal error occurred while approving user.');
