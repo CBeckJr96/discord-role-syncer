@@ -18,6 +18,7 @@ const client = new Client({
 });
 
 client.login(token);
+require('./welcome')(client);
 
 client.once('ready', () => {
   console.log(`✅ Bot is ready as ${client.user.tag}`);
